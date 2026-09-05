@@ -219,6 +219,50 @@ button:hover {
   color: var(--muted);
 }
 
+.macros {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+.macros h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.macros__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.macros__table th,
+.macros__table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.macros__table th:not(:first-child),
+.macros__table td:not(:first-child) {
+  text-align: right;
+}
+
+.macros-notes {
+  margin-top: 0.8rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.macros-disclaimer {
+  margin: 0.9rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
 .app__footer {
   margin-top: 3rem;
   font-size: 0.8rem;

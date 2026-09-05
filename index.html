@@ -36,12 +36,28 @@
       <div id="final-recipe-notes" class="final-recipe-notes"></div>
     </section>
 
+    <section id="macros" class="macros" hidden>
+      <h2>Estimation calories &amp; macros</h2>
+      <table class="macros__table">
+        <thead>
+          <tr><th></th><th>Recette de départ</th><th>Recette modifiée</th></tr>
+        </thead>
+        <tbody id="macros-body"></tbody>
+      </table>
+      <div id="macros-notes" class="macros-notes" hidden></div>
+      <p class="macros-disclaimer">
+        Estimation approximative à partir de valeurs nutritionnelles moyennes non vérifiées
+        auprès d'une base officielle — un ordre de grandeur, pas une donnée diététique certifiée.
+      </p>
+    </section>
+
     <footer class="app__footer">
       <p>Version de départ — une quinzaine de substitutions courantes (gras / sucre). À étoffer.</p>
     </footer>
   </main>
 
   <script src="substitutions.js"></script>
+  <script src="nutrition.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -275,6 +275,139 @@ function renderFinalRecipe(results, unresolvedNotes) {
   section.hidden = false;
 }
 
+// --- Estimation calories / macros (avant vs après), à partir de la table
+// NUTRITION. Toute ligne sans correspondance ou sans quantité exploitable
+// est exclue du total plutôt que d'inventer une valeur, et listée en note.
+
+function findNutrition(name) {
+  const normalizedName = normalize(name);
+  for (const entry of NUTRITION) {
+    for (const keyword of entry.match) {
+      if (normalizedName.includes(normalize(keyword))) {
+        return entry;
+      }
+    }
+  }
+  return null;
+}
+
+function gramsForIngredient(qty, unit, entry) {
+  if (qty === null) return null;
+  if (unit === null) {
+    return entry.gramsPerUnit ? qty * entry.gramsPerUnit : null;
+  }
+  const grams = gramsOf(qty, unit);
+  if (grams !== null) return grams;
+  const ml = mlOf(qty, unit);
+  if (ml !== null) return ml * (entry.densityGPerMl || 1);
+  return null;
+}
+
+function macrosFor(grams, entry) {
+  const factor = grams / 100;
+  return {
+    kcal: entry.kcal100 * factor,
+    protein: entry.protein100 * factor,
+    carbs: entry.carbs100 * factor,
+    fat: entry.fat100 * factor
+  };
+}
+
+function parseQtyText(text) {
+  const match = text.match(/^(-?\d+(?:\.\d+)?)\s*(.*)$/);
+  if (!match) return { qty: null, unit: null };
+  return { qty: parseFloat(match[1]), unit: match[2] ? match[2].trim() : null };
+}
+
+function addMacros(totals, m) {
+  totals.kcal += m.kcal;
+  totals.protein += m.protein;
+  totals.carbs += m.carbs;
+  totals.fat += m.fat;
+}
+
+function computeBeforeTotals(results) {
+  const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  const excluded = [];
+  results.forEach((result) => {
+    const entry = findNutrition(result.ingredient.name);
+    const grams = entry ? gramsForIngredient(result.ingredient.qty, result.ingredient.unit, entry) : null;
+    if (!entry || grams === null) {
+      excluded.push(result.ingredient.raw);
+      return;
+    }
+    addMacros(totals, macrosFor(grams, entry));
+  });
+  return { totals, excluded };
+}
+
+function computeAfterTotals(results) {
+  const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  const excluded = [];
+  results.forEach((result) => {
+    let name, qty, unit;
+
+    if (result.liquidAdjustedQtyText) {
+      name = result.substitution ? result.substitution.substitute : result.ingredient.name;
+      ({ qty, unit } = parseQtyText(result.liquidAdjustedQtyText));
+    } else if (result.substitution) {
+      name = result.substitution.substitute;
+      ({ qty, unit } = result.adjustedQtyText ? parseQtyText(result.adjustedQtyText) : { qty: null, unit: null });
+    } else {
+      name = result.ingredient.name;
+      qty = result.ingredient.qty;
+      unit = result.ingredient.unit;
+    }
+
+    const entry = findNutrition(name);
+    const grams = entry ? gramsForIngredient(qty, unit, entry) : null;
+    if (!entry || grams === null) {
+      excluded.push(finalIngredientLine(result));
+      return;
+    }
+    addMacros(totals, macrosFor(grams, entry));
+  });
+  return { totals, excluded };
+}
+
+function renderMacros(before, after) {
+  const section = document.getElementById("macros");
+  const body = document.getElementById("macros-body");
+  const notes = document.getElementById("macros-notes");
+  body.innerHTML = "";
+  notes.innerHTML = "";
+  notes.hidden = true;
+
+  const rows = [
+    ["Calories", `${Math.round(before.totals.kcal)} kcal`, `${Math.round(after.totals.kcal)} kcal`],
+    ["Protéines", `${before.totals.protein.toFixed(1)} g`, `${after.totals.protein.toFixed(1)} g`],
+    ["Glucides", `${before.totals.carbs.toFixed(1)} g`, `${after.totals.carbs.toFixed(1)} g`],
+    ["Lipides", `${before.totals.fat.toFixed(1)} g`, `${after.totals.fat.toFixed(1)} g`]
+  ];
+
+  rows.forEach(([label, beforeVal, afterVal]) => {
+    const tr = document.createElement("tr");
+    const tdLabel = document.createElement("td");
+    tdLabel.textContent = label;
+    const tdBefore = document.createElement("td");
+    tdBefore.textContent = beforeVal;
+    const tdAfter = document.createElement("td");
+    tdAfter.textContent = afterVal;
+    tr.append(tdLabel, tdBefore, tdAfter);
+    body.appendChild(tr);
+  });
+
+  const excludedAll = [...new Set([...before.excluded, ...after.excluded])];
+  if (excludedAll.length > 0) {
+    notes.hidden = false;
+    const p = document.createElement("p");
+    p.textContent = `Non comptabilisé (ingrédient non répertorié ou quantité imprécise) : ${excludedAll.join(", ")}.`;
+    notes.appendChild(p);
+  }
+
+  section.hidden = false;
+}
+
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
@@ -288,4 +421,11 @@ document.getElementById("transform-btn").addEventListener("click", () => {
   const unresolvedNotes = applyOtherIngredientAdjustments(results);
   renderResults(results);
   renderFinalRecipe(results, unresolvedNotes);
+
+  const macrosSection = document.getElementById("macros");
+  if (results.length === 0) {
+    macrosSection.hidden = true;
+  } else {
+    renderMacros(computeBeforeTotals(results), computeAfterTotals(results));
+  }
 });
