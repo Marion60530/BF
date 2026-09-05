@@ -176,6 +176,29 @@ button:hover {
   color: var(--muted);
 }
 
+.final-recipe {
+  margin-top: 2rem;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+
+.final-recipe h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.final-recipe ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.final-recipe li {
+  margin-bottom: 0.3rem;
+}
+
 .app__footer {
   margin-top: 3rem;
   font-size: 0.8rem;

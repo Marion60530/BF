@@ -132,6 +132,32 @@ function renderResults(results) {
   });
 }
 
+function finalIngredientLine(result) {
+  if (!result.substitution) {
+    return result.ingredient.raw;
+  }
+  const qtyPart = result.adjustedQtyText ? result.adjustedQtyText + " " : "";
+  return `${qtyPart}${result.substitution.substitute}`;
+}
+
+function renderFinalRecipe(results) {
+  const section = document.getElementById("final-recipe");
+  const list = document.getElementById("final-recipe-list");
+  list.innerHTML = "";
+
+  if (results.length === 0) {
+    section.hidden = true;
+    return;
+  }
+
+  results.forEach((result) => {
+    const li = document.createElement("li");
+    li.textContent = finalIngredientLine(result);
+    list.appendChild(li);
+  });
+  section.hidden = false;
+}
+
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
@@ -143,4 +169,5 @@ document.getElementById("transform-btn").addEventListener("click", () => {
   const lines = input.split("\n").map((l) => l.trim()).filter(Boolean);
   const results = lines.map(parseLine).map(buildResult);
   renderResults(results);
+  renderFinalRecipe(results);
 });
