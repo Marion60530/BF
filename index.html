@@ -175,7 +175,7 @@
   <label for="model">Modèle</label>
   <select id="model">
     <option value="claude-sonnet-5">Sonnet 5 (meilleure précision)</option>
-    <option value="claude-haiku-4-5-20251001">Haiku 4.5 (rapide et économique)</option>
+    <option value="claude-haiku-4-5">Haiku 4.5 (rapide et économique)</option>
   </select>
   <button class="btn-primary" id="saveSettingsBtn">Enregistrer</button>
   <button class="btn-secondary" id="clearKeyBtn">Effacer ma clé API</button>
@@ -330,9 +330,13 @@ async function callClaude(msgs) {
     },
     body: JSON.stringify({
       model: model,
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: SYSTEM_PROMPT,
-      messages: msgs
+      messages: msgs,
+      // Sonnet 5 / Opus-tier models run adaptive extended thinking by default,
+      // which eats into max_tokens before any visible text is produced.
+      // Not needed for this task (no multi-step reasoning), so disable it.
+      ...(model !== 'claude-haiku-4-5' ? { thinking: { type: 'disabled' } } : {})
     })
   });
   if (!res.ok) {
