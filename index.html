@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimation calories</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f5f3;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --border: #e2e2e0;
+    --accent: #b5651d;
+    --accent-text: #ffffff;
+    --danger: #b3261e;
+    --danger-bg: #fdecea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a;
+      --card: #232426;
+      --text: #f0f0ee;
+      --muted: #a0a0a0;
+      --border: #3a3b3d;
+      --accent: #d98c4a;
+      --accent-text: #17181a;
+      --danger: #ff8a80;
+      --danger-bg: #3a1f1d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 16px;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  h1 {
+    font-size: 1.25rem;
+    margin: 8px 0 16px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  details.card summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+  }
+  details.card summary::-webkit-details-marker { display: none; }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 12px 0 4px;
+  }
+  input[type="password"], input[type="text"], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  #preview {
+    width: 100%;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: none;
+    max-height: 320px;
+    object-fit: cover;
+  }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); font-size: 0.85rem; }
+  .spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    white-space: pre-wrap;
+  }
+  .question-block { margin-bottom: 14px; }
+  .question-block p { font-weight: 600; margin: 0 0 6px; }
+  .result-hero {
+    text-align: center;
+    padding: 14px 0 4px;
+  }
+  .result-hero .num {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .result-hero .unit {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .macros-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .macro-item {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 10px 4px;
+    text-align: center;
+  }
+  .macro-item .val { font-weight: 700; font-size: 1.1rem; }
+  .macro-item .label { font-size: 0.75rem; color: var(--muted); }
+  .assumptions {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>📸 Estimation calories</h1>
+
+<details class="card" id="settingsCard">
+  <summary>⚙️ Réglages</summary>
+  <label for="apiKey">Clé API Anthropic</label>
+  <input type="password" id="apiKey" placeholder="sk-ant-...">
+  <label for="model">Modèle</label>
+  <select id="model">
+    <option value="claude-sonnet-5">Sonnet 5 (meilleure précision)</option>
+    <option value="claude-haiku-4-5-20251001">Haiku 4.5 (rapide et économique)</option>
+  </select>
+  <button class="btn-primary" id="saveSettingsBtn">Enregistrer</button>
+  <button class="btn-secondary" id="clearKeyBtn">Effacer ma clé API</button>
+  <p class="muted">La clé est stockée uniquement dans ton navigateur (localStorage), jamais envoyée ailleurs qu'à l'API Anthropic. Chaque estimation consomme quelques centimes sur ton compte Anthropic.</p>
+</details>
+
+<div class="card" id="captureCard">
+  <label for="photoInput">Photo du repas</label>
+  <input type="file" id="photoInput" accept="image/*" capture="environment">
+  <img id="preview" alt="Aperçu">
+  <button class="btn-primary" id="analyzeBtn" disabled>Analyser</button>
+</div>
+
+<div class="card hidden" id="loadingCard">
+  <span class="spinner"></span> <span id="loadingText">Analyse en cours...</span>
+</div>
+
+<div class="card hidden" id="errorCard">
+  <div class="error-box" id="errorBox"></div>
+  <button class="btn-secondary" id="retryBtn">Réessayer</button>
+</div>
+
+<div class="card hidden" id="questionsCard">
+  <p class="muted">Quelques précisions pour affiner l'estimation :</p>
+  <div id="questionsList"></div>
+  <button class="btn-primary" id="submitAnswersBtn">Valider mes réponses</button>
+</div>
+
+<div class="card hidden" id="resultCard">
+  <div class="result-hero">
+    <div class="num" id="resCalories">-</div>
+    <div class="unit">kcal (marge +10% incluse)</div>
+  </div>
+  <div class="macros-grid">
+    <div class="macro-item"><div class="val" id="resProtein">-</div><div class="label">Protéines (g)</div></div>
+    <div class="macro-item"><div class="val" id="resCarbs">-</div><div class="label">Glucides (g)</div></div>
+    <div class="macro-item"><div class="val" id="resFat">-</div><div class="label">Lipides (g)</div></div>
+  </div>
+  <div class="assumptions" id="resAssumptions"></div>
+  <button class="btn-secondary" id="resetBtn">Nouvelle photo</button>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `Tu es un nutritionniste expert en estimation visuelle de portions alimentaires à partir de photos.
+
+RÈGLES DE SORTIE (STRICTES) :
+- Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant/après, sans balises markdown, sans commentaire.
+- Deux formats possibles :
+
+1. Si une ou plusieurs hypothèses importantes (impact estimé >15% sur le total calorique) ne peuvent pas être tranchées visuellement (type de matière grasse utilisée, sauce ou sucre caché, mode de cuisson, quantité d'un ingrédient non identifiable, portion ambiguë), pose 1 à 3 questions courtes et précises :
+{"type":"question","questions":["...","..."]}
+Ne pose des questions QUE si c'est vraiment nécessaire pour la précision. Si tu peux estimer raisonnablement à partir de la photo seule, passe directement au format final.
+
+2. Sinon, ou après avoir reçu les réponses de l'utilisateur à tes questions, donne l'estimation finale :
+{"type":"final","calories":N,"protein_g":N,"carbs_g":N,"fat_g":N,"assumptions":"résumé en une phrase des hypothèses principales retenues"}
+
+MÉTHODE D'ESTIMATION :
+- Identifie chaque aliment visible sur la photo et estime sa portion en te basant sur des repères visuels (taille d'assiette standard ~26-28cm, couverts, contenant, comparaison avec des portions connues).
+- Calcule les calories et macronutriments de chaque aliment, puis fais la somme totale.
+- Applique ensuite une marge de sécurité de +10% sur CHACUNE des valeurs finales (calories, protéines, glucides, lipides) : les estimations visuelles ont tendance à sous-estimer les portions réelles, et il vaut mieux légèrement surestimer pour un suivi calorique fiable.
+- Le résultat final est un NOMBRE UNIQUE par valeur (déjà ajusté +10%), jamais une fourchette.
+- N'inclus PAS le détail par aliment dans la réponse finale, uniquement les totaux.
+- "assumptions" doit être une seule phrase concise résumant les hypothèses principales retenues (pas un pavé).`;
+
+const el = id => document.getElementById(id);
+
+let apiKey = localStorage.getItem('calorieApp.apiKey') || '';
+let model = localStorage.getItem('calorieApp.model') || 'claude-sonnet-5';
+el('apiKey').value = apiKey;
+el('model').value = model;
+if (apiKey) el('settingsCard').removeAttribute('open');
+else el('settingsCard').setAttribute('open', '');
+
+el('saveSettingsBtn').addEventListener('click', () => {
+  apiKey = el('apiKey').value.trim();
+  model = el('model').value;
+  localStorage.setItem('calorieApp.apiKey', apiKey);
+  localStorage.setItem('calorieApp.model', model);
+  el('settingsCard').removeAttribute('open');
+});
+
+el('clearKeyBtn').addEventListener('click', () => {
+  localStorage.removeItem('calorieApp.apiKey');
+  apiKey = '';
+  el('apiKey').value = '';
+});
+
+let imageBase64 = null;
+let mediaType = 'image/jpeg';
+let messages = [];
+let pendingQuestions = [];
+
+el('photoInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const resized = await resizeImage(file, 1024, 0.82);
+  imageBase64 = resized.base64;
+  mediaType = resized.mediaType;
+  el('preview').src = `data:${mediaType};base64,${imageBase64}`;
+  el('preview').style.display = 'block';
+  el('analyzeBtn').disabled = false;
+});
+
+function resizeImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ base64: dataUrl.split(',')[1], mediaType: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function showOnly(cardId) {
+  ['captureCard', 'loadingCard', 'errorCard', 'questionsCard', 'resultCard'].forEach(id => {
+    el(id).classList.toggle('hidden', id !== cardId);
+  });
+}
+
+function showError(msg) {
+  el('errorBox').textContent = msg;
+  showOnly('errorCard');
+}
+
+async function callClaude(msgs) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: model,
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: msgs
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Erreur API (${res.status}) :\n${errText}`);
+  }
+  const data = await res.json();
+  return data.content.map(b => b.text || '').join('');
+}
+
+function extractJSON(text) {
+  let t = text.trim();
+  t = t.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const start = t.indexOf('{');
+  const end = t.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('Réponse non-JSON reçue :\n' + text);
+  return JSON.parse(t.slice(start, end + 1));
+}
+
+el('analyzeBtn').addEventListener('click', async () => {
+  if (!apiKey) {
+    el('settingsCard').setAttribute('open', '');
+    showError('Renseigne d\'abord ta clé API Anthropic dans les réglages.');
+    return;
+  }
+  messages = [{
+    role: 'user',
+    content: [
+      { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
+      { type: 'text', text: 'Voici la photo de mon repas. Estime les calories et macros.' }
+    ]
+  }];
+  el('loadingText').textContent = 'Analyse en cours...';
+  showOnly('loadingCard');
+  try {
+    const raw = await callClaude(messages);
+    messages.push({ role: 'assistant', content: raw });
+    const parsed = extractJSON(raw);
+    if (parsed.type === 'question') {
+      pendingQuestions = parsed.questions || [];
+      renderQuestions(pendingQuestions);
+    } else {
+      renderFinal(parsed);
+    }
+  } catch (err) {
+    showError(err.message);
+  }
+});
+
+function renderQuestions(questions) {
+  const list = el('questionsList');
+  list.innerHTML = '';
+  questions.forEach((q, i) => {
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.innerHTML = `<p>${escapeHtml(q)}</p><textarea rows="2" data-idx="${i}"></textarea>`;
+    list.appendChild(block);
+  });
+  showOnly('questionsCard');
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+el('submitAnswersBtn').addEventListener('click', async () => {
+  const textareas = el('questionsList').querySelectorAll('textarea');
+  const answerText = pendingQuestions.map((q, i) => {
+    const a = textareas[i].value.trim() || '(pas de réponse précise, fais ton meilleur estimation)';
+    return `Q: ${q}\nR: ${a}`;
+  }).join('\n\n');
+
+  messages.push({
+    role: 'user',
+    content: `Mes réponses :\n\n${answerText}\n\nDonne maintenant l'estimation finale au format JSON "final" uniquement. Ne repose plus de questions, fais ton meilleur estimation avec ces informations.`
+  });
+
+  el('loadingText').textContent = 'Estimation finale en cours...';
+  showOnly('loadingCard');
+  try {
+    let raw = await callClaude(messages);
+    messages.push({ role: 'assistant', content: raw });
+    let parsed = extractJSON(raw);
+    if (parsed.type !== 'final') {
+      messages.push({
+        role: 'user',
+        content: 'Réponds uniquement avec le format JSON final (type:"final"), avec ton estimation la plus probable, même si une incertitude subsiste.'
+      });
+      raw = await callClaude(messages);
+      parsed = extractJSON(raw);
+    }
+    renderFinal(parsed);
+  } catch (err) {
+    showError(err.message);
+  }
+});
+
+function renderFinal(data) {
+  el('resCalories').textContent = Math.round(data.calories ?? 0);
+  el('resProtein').textContent = Math.round(data.protein_g ?? 0);
+  el('resCarbs').textContent = Math.round(data.carbs_g ?? 0);
+  el('resFat').textContent = Math.round(data.fat_g ?? 0);
+  el('resAssumptions').textContent = data.assumptions || '';
+  showOnly('resultCard');
+}
+
+el('retryBtn').addEventListener('click', () => showOnly('captureCard'));
+
+el('resetBtn').addEventListener('click', () => {
+  imageBase64 = null;
+  messages = [];
+  pendingQuestions = [];
+  el('photoInput').value = '';
+  el('preview').style.display = 'none';
+  el('analyzeBtn').disabled = true;
+  showOnly('captureCard');
+});
+</script>
+</body>
+</html>
