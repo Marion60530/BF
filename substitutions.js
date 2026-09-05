@@ -11,9 +11,9 @@ const SUBSTITUTIONS = [
     substitute: "compote de pomme sans sucre ajouté",
     ratio: 0.75,
     adjustments: [
-      "Réduis les autres liquides de la recette d'environ 2 c. à soupe par 100 g de beurre remplacé.",
       "Diminue le temps de cuisson au four de 5 à 10 min et surveille la coloration : la compote garde le moelleux plus longtemps."
     ],
+    otherIngredientAdjustment: { amount: 2, unit: "c. à soupe", perQty: 100, perUnit: "g" },
     caveat: "Ne convient pas aux recettes où le beurre doit rester solide (sablés, pâte feuilletée, croustillant recherché).",
     impact: ["gras"]
   },
@@ -117,9 +117,9 @@ const SUBSTITUTIONS = [
     substitute: "purée de dattes",
     ratio: 1,
     adjustments: [
-      "Réduis les autres liquides de la recette d'environ 3 c. à soupe par 200 g de sucre remplacé.",
       "La texture sera plus dense et moelleuse, avec une couleur plus foncée."
     ],
+    otherIngredientAdjustment: { amount: 3, unit: "c. à soupe", perQty: 200, perUnit: "g" },
     caveat: "Apporte un léger goût caramélisé, à éviter si tu veux un goût neutre.",
     impact: ["sucre"]
   },
@@ -129,7 +129,8 @@ const SUBSTITUTIONS = [
     category: "sucre",
     substitute: "sirop d'agave",
     ratio: 0.75,
-    adjustments: ["Réduis les autres liquides de la recette d'environ 2 c. à soupe par 100 g de cassonade remplacée."],
+    adjustments: [],
+    otherIngredientAdjustment: { amount: 2, unit: "c. à soupe", perQty: 100, perUnit: "g" },
     caveat: "Texture plus moelleuse, moins de « croustillant » en surface (ex. cookies).",
     impact: ["sucre"]
   },
@@ -149,7 +150,10 @@ const SUBSTITUTIONS = [
     category: "sucre",
     substitute: "purée de banane bien mûre",
     ratio: 0.8,
-    adjustments: ["Réduis légèrement les autres liquides de la recette : la banane apporte de l'humidité."],
+    adjustments: [],
+    otherIngredientAdjustment: {
+      note: "Réduis légèrement les autres liquides de la recette (quantité non précisée) : la banane apporte de l'humidité."
+    },
     caveat: "Ajoute un goût de banane perceptible, à réserver aux recettes qui s'y prêtent.",
     impact: ["sucre"]
   }
