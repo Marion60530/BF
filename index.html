@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recette plus healthy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <h1>Rends ta recette plus healthy</h1>
+      <p class="app__subtitle">
+        Colle ta liste d'ingrédients (une ligne par ingrédient, idéalement avec la quantité)
+        et obtiens des alternatives moins grasses ou moins sucrées, avec les quantités ajustées.
+      </p>
+    </header>
+
+    <section class="app__input">
+      <textarea
+        id="ingredients-input"
+        rows="8"
+        placeholder="Exemple :&#10;200g de beurre&#10;150g de sucre&#10;2 oeufs&#10;20cl de crème fraîche"
+      ></textarea>
+      <button id="transform-btn">Transformer ma recette</button>
+    </section>
+
+    <section class="app__output">
+      <p id="summary" class="summary"></p>
+      <div id="results" class="results"></div>
+    </section>
+
+    <footer class="app__footer">
+      <p>Version de départ — une quinzaine de substitutions courantes (gras / sucre). À étoffer.</p>
+    </footer>
+  </main>
+
+  <script src="substitutions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
