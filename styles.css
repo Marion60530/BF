@@ -111,6 +111,10 @@ button:hover {
   opacity: 0.75;
 }
 
+.card--neutral .card__original {
+  text-decoration: none;
+}
+
 .card__badges {
   display: flex;
   gap: 0.4rem;
