@@ -370,19 +370,13 @@ function computeAfterTotals(results) {
   return { totals, excluded };
 }
 
-function renderMacros(before, after) {
-  const section = document.getElementById("macros");
-  const body = document.getElementById("macros-body");
-  const notes = document.getElementById("macros-notes");
-  body.innerHTML = "";
-  notes.innerHTML = "";
-  notes.hidden = true;
-
+function fillMacroRows(bodyEl, before, after, divisor) {
+  bodyEl.innerHTML = "";
   const rows = [
-    ["Calories", `${Math.round(before.totals.kcal)} kcal`, `${Math.round(after.totals.kcal)} kcal`],
-    ["Protéines", `${before.totals.protein.toFixed(1)} g`, `${after.totals.protein.toFixed(1)} g`],
-    ["Glucides", `${before.totals.carbs.toFixed(1)} g`, `${after.totals.carbs.toFixed(1)} g`],
-    ["Lipides", `${before.totals.fat.toFixed(1)} g`, `${after.totals.fat.toFixed(1)} g`]
+    ["Calories", `${Math.round(before.totals.kcal / divisor)} kcal`, `${Math.round(after.totals.kcal / divisor)} kcal`],
+    ["Protéines", `${(before.totals.protein / divisor).toFixed(1)} g`, `${(after.totals.protein / divisor).toFixed(1)} g`],
+    ["Glucides", `${(before.totals.carbs / divisor).toFixed(1)} g`, `${(after.totals.carbs / divisor).toFixed(1)} g`],
+    ["Lipides", `${(before.totals.fat / divisor).toFixed(1)} g`, `${(after.totals.fat / divisor).toFixed(1)} g`]
   ];
 
   rows.forEach(([label, beforeVal, afterVal]) => {
@@ -394,8 +388,31 @@ function renderMacros(before, after) {
     const tdAfter = document.createElement("td");
     tdAfter.textContent = afterVal;
     tr.append(tdLabel, tdBefore, tdAfter);
-    body.appendChild(tr);
+    bodyEl.appendChild(tr);
   });
+}
+
+function renderMacros(before, after, servings) {
+  const section = document.getElementById("macros");
+  const body = document.getElementById("macros-body");
+  const notes = document.getElementById("macros-notes");
+  const perServingLabel = document.getElementById("macros-per-serving-label");
+  const perServingTable = document.getElementById("macros-per-serving-table");
+  const perServingBody = document.getElementById("macros-per-serving-body");
+  notes.innerHTML = "";
+  notes.hidden = true;
+
+  fillMacroRows(body, before, after, 1);
+
+  if (servings && servings > 1) {
+    perServingLabel.textContent = `Par part (recette divisée en ${servings}) :`;
+    perServingLabel.hidden = false;
+    fillMacroRows(perServingBody, before, after, servings);
+    perServingTable.hidden = false;
+  } else {
+    perServingLabel.hidden = true;
+    perServingTable.hidden = true;
+  }
 
   const excludedAll = [...new Set([...before.excluded, ...after.excluded])];
   if (excludedAll.length > 0) {
@@ -426,6 +443,8 @@ document.getElementById("transform-btn").addEventListener("click", () => {
   if (results.length === 0) {
     macrosSection.hidden = true;
   } else {
-    renderMacros(computeBeforeTotals(results), computeAfterTotals(results));
+    const servingsValue = parseInt(document.getElementById("servings-input").value, 10);
+    const servings = Number.isInteger(servingsValue) && servingsValue > 0 ? servingsValue : null;
+    renderMacros(computeBeforeTotals(results), computeAfterTotals(results), servings);
   }
 });

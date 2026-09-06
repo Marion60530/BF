@@ -22,6 +22,10 @@
         rows="8"
         placeholder="Exemple :&#10;200g de beurre&#10;150g de sucre&#10;2 oeufs&#10;20cl de crème fraîche"
       ></textarea>
+      <label class="servings-field">
+        Nombre de parts (optionnel, pour voir les calories par part)
+        <input type="number" id="servings-input" min="1" step="1" placeholder="ex : 8" />
+      </label>
       <button id="transform-btn">Transformer ma recette</button>
     </section>
 
@@ -48,6 +52,13 @@
           <tr><th></th><th>Recette de départ</th><th>Recette modifiée</th></tr>
         </thead>
         <tbody id="macros-body"></tbody>
+      </table>
+      <p id="macros-per-serving-label" class="macros-per-serving-label" hidden></p>
+      <table id="macros-per-serving-table" class="macros__table" hidden>
+        <thead>
+          <tr><th></th><th>Recette de départ</th><th>Recette modifiée</th></tr>
+        </thead>
+        <tbody id="macros-per-serving-body"></tbody>
       </table>
       <div id="macros-notes" class="macros-notes" hidden></div>
       <p class="macros-disclaimer">
