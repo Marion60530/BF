@@ -17,8 +17,9 @@ ou sers le dossier avec n'importe quel serveur statique (ex. `python3 -m http.se
 - `index.html` — page unique
 - `styles.css` — style
 - `substitutions.js` — table de substitutions (gras/sucre, ratio, conseils, mise en garde)
-- `nutrition.js` — table nutritionnelle (kcal/protéines/glucides/lipides pour 100 g),
-  sourcée sur la table Ciqual 2025 (ANSES) — chaque entrée cite l'aliment Ciqual utilisé
+- `nutrition.js` — table nutritionnelle (kcal/protéines/glucides/lipides pour 100 g).
+  Référence : Anses. 2025. Table de composition nutritionnelle des aliments Ciqual.
+  Chaque entrée cite l'aliment Ciqual utilisé
 - `app.js` — parsing de la liste d'ingrédients, application des substitutions,
   calcul calories/macros avant-après
 

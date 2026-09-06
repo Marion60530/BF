@@ -1,5 +1,7 @@
-// Table nutritionnelle sourcée sur la table Ciqual 2025 (ANSES), extrait
-// fourni par l'utilisateur (Table_Ciqual_2025_FR_2025_11_03.xls, onglet
+// Référence (citation exigée par l'ANSES en cas de réutilisation des données) :
+// Anses. 2025. Table de composition nutritionnelle des aliments Ciqual.
+//
+// Extrait fourni par l'utilisateur (Table_Ciqual_2025_FR_2025_11_03.xls, onglet
 // "composition nutritionnelle"). Chaque entrée cite l'aliment Ciqual utilisé
 // (alim_nom_fr) pour rester traçable. Couvre les ingrédients de la table de
 // substitutions + quelques bases de recette courantes ; un ingrédient absent
