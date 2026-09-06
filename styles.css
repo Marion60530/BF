@@ -178,6 +178,16 @@ button:hover {
   margin-bottom: 0.5rem;
 }
 
+.card__option-picker {
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
 .card__adjustments {
   margin: 0.4rem 0 0;
   padding-left: 1.1rem;

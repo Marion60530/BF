@@ -34,16 +34,29 @@ function parseLine(line) {
   return { raw: trimmed, qty: null, unit: null, name: trimmed };
 }
 
+// Une entrée peut proposer plusieurs alternatives (`options: [...]`) ou une
+// seule (à plat, comme la plupart des entrées) : on uniformise ici pour que
+// le reste du code lise toujours `entry.options[optionIndex]`.
+function normalizeSubstitution(entry) {
+  if (entry.options) return entry;
+  const { substitute, ratio, adjustments, otherIngredientAdjustment, caveat, ...rest } = entry;
+  return { ...rest, options: [{ substitute, ratio, adjustments, otherIngredientAdjustment, caveat }] };
+}
+
 function findSubstitution(name) {
   const normalizedName = normalize(name);
   for (const entry of SUBSTITUTIONS) {
     for (const keyword of entry.match) {
       if (normalizedName.includes(normalize(keyword))) {
-        return entry;
+        return normalizeSubstitution(entry);
       }
     }
   }
   return null;
+}
+
+function chosenOption(result) {
+  return result.substitution.options[result.optionIndex || 0];
 }
 
 function formatQty(qty) {
@@ -52,19 +65,19 @@ function formatQty(qty) {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
+function computeAdjustedQtyText(result) {
+  if (!result.substitution || result.ingredient.qty === null) return null;
+  const option = chosenOption(result);
+  const adjustedQty = formatQty(result.ingredient.qty * option.ratio);
+  return `${adjustedQty}${result.ingredient.unit ? " " + result.ingredient.unit : ""}`;
+}
+
 function buildResult(parsedIngredient) {
   const sub = findSubstitution(parsedIngredient.name);
   if (!sub) {
     return { ingredient: parsedIngredient, substitution: null };
   }
-
-  let adjustedQtyText = null;
-  if (parsedIngredient.qty !== null) {
-    const adjustedQty = formatQty(parsedIngredient.qty * sub.ratio);
-    adjustedQtyText = `${adjustedQty}${parsedIngredient.unit ? " " + parsedIngredient.unit : ""}`;
-  }
-
-  return { ingredient: parsedIngredient, substitution: sub, adjustedQtyText };
+  return { ingredient: parsedIngredient, substitution: sub, optionIndex: 0 };
 }
 
 function categoryLabel(category) {
@@ -94,7 +107,7 @@ function renderResults(results) {
     summary.textContent = `${matched.length} ingrédient(s) sur ${results.length} peuvent être remplacés pour réduire : ${parts.join(" et ")}.`;
   }
 
-  results.forEach((result) => {
+  results.forEach((result, index) => {
     const card = document.createElement("div");
     card.className = "card";
 
@@ -109,6 +122,7 @@ function renderResults(results) {
     }
 
     const sub = result.substitution;
+    const option = chosenOption(result);
     const badges = sub.impact
       .map(
         (cat) =>
@@ -116,21 +130,35 @@ function renderResults(results) {
       )
       .join("");
 
-    const adjustmentsHtml = sub.adjustments
+    const adjustmentsHtml = option.adjustments
       .map((a) => `<li>${escapeHtml(a)}</li>`)
       .join("");
+
+    const pickerHtml = sub.options.length > 1
+      ? `<select class="card__option-picker" data-result-index="${index}">
+          ${sub.options.map((o, i) => `<option value="${i}" ${i === (result.optionIndex || 0) ? "selected" : ""}>${escapeHtml(o.substitute)}</option>`).join("")}
+        </select>`
+      : "";
 
     card.innerHTML = `
       <div class="card__badges">${badges}</div>
       <div class="card__original">${escapeHtml(result.ingredient.raw)}</div>
       <div class="card__arrow">→</div>
       <div class="card__substitute">
-        ${result.adjustedQtyText ? escapeHtml(result.adjustedQtyText) + " " : ""}${escapeHtml(sub.substitute)}
+        ${result.adjustedQtyText ? escapeHtml(result.adjustedQtyText) + " " : ""}${pickerHtml || escapeHtml(option.substitute)}
       </div>
-      ${sub.adjustments.length > 0 ? `<ul class="card__adjustments">${adjustmentsHtml}</ul>` : ""}
-      ${sub.caveat ? `<div class="card__caveat">⚠️ ${escapeHtml(sub.caveat)}</div>` : ""}
+      ${option.adjustments.length > 0 ? `<ul class="card__adjustments">${adjustmentsHtml}</ul>` : ""}
+      ${option.caveat ? `<div class="card__caveat">⚠️ ${escapeHtml(option.caveat)}</div>` : ""}
     `;
     container.appendChild(card);
+  });
+
+  container.querySelectorAll(".card__option-picker").forEach((select) => {
+    select.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.resultIndex, 10);
+      currentResults[idx].optionIndex = parseInt(e.target.value, 10);
+      refresh();
+    });
   });
 }
 
@@ -175,14 +203,14 @@ function mlToUnit(ml, unit) {
 // l'applique à un ingrédient liquide trouvé dans la liste, et renvoie les
 // conseils qui n'ont pas pu être appliqués automatiquement.
 function applyOtherIngredientAdjustments(results) {
-  const triggers = results.filter((r) => r.substitution && r.substitution.otherIngredientAdjustment);
+  const triggers = results.filter((r) => r.substitution && chosenOption(r).otherIngredientAdjustment);
   const unresolvedNotes = [];
   if (triggers.length === 0) return unresolvedNotes;
 
   let totalReductionMl = 0;
 
   triggers.forEach((result) => {
-    const adj = result.substitution.otherIngredientAdjustment;
+    const adj = chosenOption(result).otherIngredientAdjustment;
     const grams = adj.amount !== undefined && result.ingredient.qty !== null
       ? gramsOf(result.ingredient.qty, result.ingredient.unit)
       : null;
@@ -227,14 +255,14 @@ function applyOtherIngredientAdjustments(results) {
 
 function finalIngredientLine(result) {
   if (result.liquidAdjustedQtyText) {
-    const name = result.substitution ? result.substitution.substitute : result.ingredient.name;
+    const name = result.substitution ? chosenOption(result).substitute : result.ingredient.name;
     return `${result.liquidAdjustedQtyText} ${name} (${result.liquidAdjustedNote})`;
   }
   if (!result.substitution) {
     return result.ingredient.raw;
   }
   const qtyPart = result.adjustedQtyText ? result.adjustedQtyText + " " : "";
-  return `${qtyPart}${result.substitution.substitute}`;
+  return `${qtyPart}${chosenOption(result).substitute}`;
 }
 
 function renderFinalRecipe(results, unresolvedNotes) {
@@ -348,10 +376,10 @@ function computeAfterTotals(results) {
     let name, qty, unit;
 
     if (result.liquidAdjustedQtyText) {
-      name = result.substitution ? result.substitution.substitute : result.ingredient.name;
+      name = result.substitution ? chosenOption(result).substitute : result.ingredient.name;
       ({ qty, unit } = parseQtyText(result.liquidAdjustedQtyText));
     } else if (result.substitution) {
-      name = result.substitution.substitute;
+      name = chosenOption(result).substitute;
       ({ qty, unit } = result.adjustedQtyText ? parseQtyText(result.adjustedQtyText) : { qty: null, unit: null });
     } else {
       name = result.ingredient.name;
@@ -431,20 +459,35 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-document.getElementById("transform-btn").addEventListener("click", () => {
-  const input = document.getElementById("ingredients-input").value;
-  const lines = input.split("\n").map((l) => l.trim()).filter(Boolean);
-  const results = lines.map(parseLine).map(buildResult);
-  const unresolvedNotes = applyOtherIngredientAdjustments(results);
-  renderResults(results);
-  renderFinalRecipe(results, unresolvedNotes);
+let currentResults = [];
+
+// Reconstruit tout l'affichage à partir de currentResults : appelé après la
+// transformation initiale, et à nouveau à chaque changement d'alternative
+// choisie dans un menu déroulant (sans reparser la liste d'ingrédients).
+function refresh() {
+  currentResults.forEach((result) => {
+    result.adjustedQtyText = computeAdjustedQtyText(result);
+    delete result.liquidAdjustedQtyText;
+    delete result.liquidAdjustedNote;
+  });
+
+  const unresolvedNotes = applyOtherIngredientAdjustments(currentResults);
+  renderResults(currentResults);
+  renderFinalRecipe(currentResults, unresolvedNotes);
 
   const macrosSection = document.getElementById("macros");
-  if (results.length === 0) {
+  if (currentResults.length === 0) {
     macrosSection.hidden = true;
   } else {
     const servingsValue = parseInt(document.getElementById("servings-input").value, 10);
     const servings = Number.isInteger(servingsValue) && servingsValue > 0 ? servingsValue : null;
-    renderMacros(computeBeforeTotals(results), computeAfterTotals(results), servings);
+    renderMacros(computeBeforeTotals(currentResults), computeAfterTotals(currentResults), servings);
   }
+}
+
+document.getElementById("transform-btn").addEventListener("click", () => {
+  const input = document.getElementById("ingredients-input").value;
+  const lines = input.split("\n").map((l) => l.trim()).filter(Boolean);
+  currentResults = lines.map(parseLine).map(buildResult);
+  refresh();
 });

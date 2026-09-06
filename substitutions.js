@@ -114,14 +114,39 @@ const SUBSTITUTIONS = [
     id: "sucre-blanc",
     match: ["sucre", "sucre blanc", "sucre en poudre", "sucre semoule"],
     category: "sucre",
-    substitute: "purée de dattes",
-    ratio: 1,
-    adjustments: [
-      "La texture sera plus dense et moelleuse, avec une couleur plus foncée."
-    ],
-    otherIngredientAdjustment: { amount: 3, unit: "c. à soupe", perQty: 200, perUnit: "g" },
-    caveat: "Apporte un léger goût caramélisé, à éviter si tu veux un goût neutre.",
-    impact: ["sucre"]
+    impact: ["sucre"],
+    // Plusieurs alternatives courantes au sucre blanc : l'utilisateur choisit
+    // celle qui convient à sa recette plutôt que de se voir imposer un seul choix.
+    options: [
+      {
+        substitute: "purée de dattes",
+        ratio: 1,
+        adjustments: ["La texture sera plus dense et moelleuse, avec une couleur plus foncée."],
+        otherIngredientAdjustment: { amount: 3, unit: "c. à soupe", perQty: 200, perUnit: "g" },
+        caveat: "Apporte un léger goût caramélisé, à éviter si tu veux un goût neutre."
+      },
+      {
+        substitute: "miel",
+        ratio: 0.75,
+        adjustments: ["Baisse la température du four d'environ 10°C : le miel brunit plus vite que le sucre."],
+        otherIngredientAdjustment: { amount: 3, unit: "c. à soupe", perQty: 200, perUnit: "g" },
+        caveat: "Goût prononcé et non végane, à réserver aux recettes qui s'y prêtent."
+      },
+      {
+        substitute: "sirop d'agave",
+        ratio: 0.75,
+        adjustments: ["Goût neutre, se substitue facilement sans changer l'arôme de la recette."],
+        otherIngredientAdjustment: { amount: 2, unit: "c. à soupe", perQty: 100, perUnit: "g" },
+        caveat: "Index glycémique plus bas que le sucre, mais reste aussi calorique — pas un produit \"sans sucre\"."
+      },
+      {
+        substitute: "compote de pomme sans sucre ajouté",
+        ratio: 1,
+        adjustments: ["Résultat moins sucré que l'original : ajoute une pointe d'un autre édulcorant si besoin."],
+        otherIngredientAdjustment: { amount: 3, unit: "c. à soupe", perQty: 200, perUnit: "g" },
+        caveat: "Apporte de l'humidité en plus, à éviter dans une pâte déjà liquide."
+      }
+    ]
   },
   {
     id: "cassonade",
