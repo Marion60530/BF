@@ -265,17 +265,54 @@ function finalIngredientLine(result) {
   return `${qtyPart}${chosenOption(result).substitute}`;
 }
 
+// Repérer quand le même substitut est choisi pour plusieurs ingrédients
+// d'origine différente (ex. beurre ET sucre remplacés tous les deux par de
+// la compote) : chaque rôle perdu s'ajoute (plus de gras du tout, humidité
+// cumulée) et le résultat peut être franchement raté, pas juste "différent".
+function detectDuplicateSubstitutes(results) {
+  const bySubstitute = new Map();
+  results.forEach((result) => {
+    if (!result.substitution) return;
+    const name = chosenOption(result).substitute;
+    if (!bySubstitute.has(name)) bySubstitute.set(name, []);
+    bySubstitute.get(name).push(result.ingredient.name);
+  });
+
+  const warnings = [];
+  bySubstitute.forEach((originalNames, substituteName) => {
+    if (originalNames.length > 1) {
+      warnings.push(
+        `Tu remplaces à la fois ${originalNames.join(" et ")} par "${substituteName}" : cumuler le même produit pour plusieurs rôles différents (ex. gras ET sucre) peut donner un résultat trop humide et sans structure. Choisis plutôt une alternative différente pour l'un des deux.`
+      );
+    }
+  });
+  return warnings;
+}
+
 function renderFinalRecipe(results, unresolvedNotes) {
   const section = document.getElementById("final-recipe");
   const list = document.getElementById("final-recipe-list");
   const notesEl = document.getElementById("final-recipe-notes");
+  const warningsEl = document.getElementById("final-recipe-warnings");
   list.innerHTML = "";
   notesEl.innerHTML = "";
   notesEl.hidden = true;
+  warningsEl.innerHTML = "";
+  warningsEl.hidden = true;
 
   if (results.length === 0) {
     section.hidden = true;
     return;
+  }
+
+  const duplicateWarnings = detectDuplicateSubstitutes(results);
+  if (duplicateWarnings.length > 0) {
+    warningsEl.hidden = false;
+    duplicateWarnings.forEach((warning) => {
+      const p = document.createElement("p");
+      p.textContent = `⚠️ ${warning}`;
+      warningsEl.appendChild(p);
+    });
   }
 
   results.forEach((result) => {
