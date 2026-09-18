@@ -238,7 +238,11 @@ MÉTHODE D'ESTIMATION :
 - Applique ensuite une marge de sécurité de +10% sur CHACUNE des valeurs finales (calories, protéines, glucides, lipides) : les estimations visuelles ont tendance à sous-estimer les portions réelles, et il vaut mieux légèrement surestimer pour un suivi calorique fiable.
 - Le résultat final est un NOMBRE UNIQUE par valeur (déjà ajusté +10%), jamais une fourchette.
 - N'inclus PAS le détail par aliment dans la réponse finale, uniquement les totaux.
-- "assumptions" doit être une seule phrase concise résumant les hypothèses principales retenues (pas un pavé).`;
+- "assumptions" doit être une seule phrase concise résumant les hypothèses principales retenues (pas un pavé).
+
+VÉRIFICATION AVANT DE VALIDER :
+- Les photos donnent souvent une impression de volume plus grande que le poids réel (surtout en gros plan ou en vue de dessus) : ne pars pas du principe qu'une assiette qui semble pleine correspond à une grosse portion en grammes.
+- Avant de finaliser, compare ton total à des repères connus pour ce type de plat (ex : un plat de pâtes portion normale ≈ 500-700 kcal, un burger simple avec frites ≈ 700-900 kcal, une salade composée avec protéine ≈ 350-550 kcal). Si ton calcul s'écarte fortement de ces repères sans que la photo montre clairement une portion inhabituelle (très grande assiette, plusieurs portions visibles, ingrédients très caloriques en grande quantité), reconsidère ton estimation de portion avant de répondre.`;
 
 const el = id => document.getElementById(id);
 
@@ -330,13 +334,14 @@ async function callClaude(msgs) {
     },
     body: JSON.stringify({
       model: model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: msgs,
-      // Sonnet 5 / Opus-tier models run adaptive extended thinking by default,
-      // which eats into max_tokens before any visible text is produced.
-      // Not needed for this task (no multi-step reasoning), so disable it.
-      ...(model !== 'claude-haiku-4-5' ? { thinking: { type: 'disabled' } } : {})
+      // Careful portion-size reasoning needs the model's thinking step, not less
+      // of it — keep it on (Sonnet 5 defaults to adaptive) and just give enough
+      // max_tokens so it never crowds out the visible answer. Effort capped at
+      // "medium" to bound cost (not supported on Haiku, so only set for Sonnet).
+      ...(model === 'claude-sonnet-5' ? { output_config: { effort: 'medium' } } : {})
     })
   });
   if (!res.ok) {
