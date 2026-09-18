@@ -81,7 +81,7 @@ function buildResult(parsedIngredient) {
 }
 
 function categoryLabel(category) {
-  return category === "gras" ? "Moins de gras" : "Moins de sucre";
+  return category === "gras" ? "🥑 Moins de gras" : "🍎 Moins de sucre";
 }
 
 function renderResults(results) {
@@ -115,7 +115,7 @@ function renderResults(results) {
       card.classList.add("card--neutral");
       card.innerHTML = `
         <div class="card__original">${escapeHtml(result.ingredient.raw)}</div>
-        <div class="card__note">Aucune alternative répertoriée pour cet ingrédient.</div>
+        <div class="card__note">🤷 Aucune alternative répertoriée pour cet ingrédient.</div>
       `;
       container.appendChild(card);
       return;
@@ -143,7 +143,7 @@ function renderResults(results) {
     card.innerHTML = `
       <div class="card__badges">${badges}</div>
       <div class="card__original">${escapeHtml(result.ingredient.raw)}</div>
-      <div class="card__arrow">→</div>
+      <div class="card__arrow">👉</div>
       <div class="card__substitute">
         ${result.adjustedQtyText ? escapeHtml(result.adjustedQtyText) + " " : ""}${pickerHtml || escapeHtml(option.substitute)}
       </div>
