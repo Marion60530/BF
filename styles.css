@@ -1,29 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+
 :root {
   color-scheme: light dark;
-  --bg: #faf8f5;
+  --bg: #fffaf3;
   --text: #2b2620;
   --muted: #6f6a62;
-  --border: #ddd5c7;
+  --border: #e8dfd0;
   --card-bg: #ffffff;
-  --accent: #3f7d4f;
-  --accent-soft: #e7f2e9;
-  --sugar: #b5651d;
-  --sugar-soft: #fbeee1;
-  --caveat: #a13a2f;
+  --accent: #1e9e96;
+  --accent-soft: #ddf4f2;
+  --sugar: #e0538f;
+  --sugar-soft: #fce4ee;
+  --caveat: #d1476f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1c1a17;
+    --bg: #1a2220;
     --text: #f1ede6;
     --muted: #a9a196;
-    --border: #3a352d;
-    --card-bg: #262320;
-    --accent: #7fc78f;
-    --accent-soft: #24352a;
-    --sugar: #e0a05e;
-    --sugar-soft: #3a2c1f;
-    --caveat: #e37a6b;
+    --border: #33413e;
+    --card-bg: #22302d;
+    --accent: #5cd0c6;
+    --accent-soft: #1f3c39;
+    --sugar: #f48fbb;
+    --sugar-soft: #3d2530;
+    --caveat: #f48fbb;
   }
 }
 
@@ -35,8 +37,12 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
+}
+
+h1, h2, button, .card__option-picker {
+  font-family: "Baloo 2", "Quicksand", -apple-system, sans-serif;
 }
 
 .app {
@@ -46,8 +52,9 @@ body {
 }
 
 .app__header h1 {
-  font-size: 1.6rem;
+  font-size: 1.9rem;
   margin-bottom: 0.4rem;
+  color: var(--accent);
 }
 
 .app__subtitle {
@@ -99,17 +106,24 @@ textarea {
 
 button {
   align-self: flex-start;
-  padding: 0.65rem 1.4rem;
+  padding: 0.7rem 1.6rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   background: var(--accent);
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
 }
 
 button:hover {
-  opacity: 0.9;
+  opacity: 0.92;
+}
+
+button:active {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  transform: translateY(2px);
 }
 
 .summary {
@@ -126,7 +140,7 @@ button:hover {
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 16px;
   padding: 1rem 1.1rem;
   background: var(--card-bg);
 }
@@ -214,7 +228,7 @@ button:hover {
   margin-top: 2rem;
   padding: 1.1rem 1.3rem;
   border: 1px solid var(--accent);
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--accent-soft);
 }
 
@@ -257,7 +271,7 @@ button:hover {
   margin-top: 1.5rem;
   padding: 1.1rem 1.3rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--card-bg);
 }
 
